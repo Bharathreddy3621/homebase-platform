@@ -1,0 +1,71 @@
+<%- include('../partials/head') %>
+  </head>
+  <body>
+    <%- include('../partials/nav') %>
+    <main class="container mx-auto mt-10 max-w-6xl rounded-lg bg-white p-8 shadow-lg">
+      <div class="mb-8 border-b pb-6 text-center">
+        <p class="text-sm font-semibold uppercase tracking-[0.3em] text-red-400">Home detail</p>
+        <h2 class="mt-2 text-3xl font-bold text-red-500">
+          Details of <%= home.houseName %>
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+        <div class="overflow-hidden rounded-2xl shadow-md">
+          <img src="<%= home.photoUrl %>" alt="<%= home.houseName %>" class="h-80 w-full object-cover md:h-full">
+        </div>
+
+        <div class="space-y-6">
+          <div class="border-b pb-4">
+            <h3 class="mb-2 text-2xl font-semibold">Description</h3>
+            <p class="text-gray-600"><%= home.description %></p>
+          </div>
+
+          <div class="border-b pb-4">
+            <h3 class="mb-2 text-2xl font-semibold">Location</h3>
+            <p class="text-gray-600"><%= home.location %></p>
+          </div>
+
+          <div class="border-b pb-4">
+            <h3 class="mb-2 text-2xl font-semibold">Price</h3>
+            <p class="text-green-600 text-xl font-bold">Rs <%= home.price %> / night</p>
+          </div>
+
+          <div class="border-b pb-4">
+            <h3 class="mb-2 text-2xl font-semibold">Rating</h3>
+            <div class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="mr-2 h-5 w-5 text-yellow-400">
+                <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+              </svg>
+              <span class="text-lg"><%= home.rating %> / 5</span>
+            </div>
+          </div>
+
+          <div class="border-b pb-4">
+            <h3 class="mb-2 text-2xl font-semibold">House Rules</h3>
+          
+            <% if (home.houseRules) { %>
+              <a
+                href="/<%= home.houseRules %>"
+                download
+                class="inline-flex items-center rounded-md bg-blue-500 px-4 py-2 font-medium text-white transition hover:bg-blue-600"
+              >
+                Download House Rules (PDF)
+              </a>
+            <% } else { %>
+              <p class="text-gray-500">No house rules document available.</p>
+            <% } %>
+          </div>
+
+
+          <div class="flex flex-wrap items-center gap-3 pt-2">
+            <%- include('../partials/favourite', { home: home, isLoggedIn: isLoggedIn }) %>
+            <a href="/homes" class="inline-flex items-center rounded-md bg-slate-200 px-4 py-2 font-medium text-slate-800 transition hover:bg-slate-300">
+              Back to homes
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
