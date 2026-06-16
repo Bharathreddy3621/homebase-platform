@@ -17,15 +17,17 @@ const requireHostApi = (req, res, next) => {
 };
 
 hostRouter.get("/host/homes", requireHostApi, hostController.getHostHomesApi);
+
 hostRouter.post(
   "/host/homes",
   requireHostApi,
   upload.fields([
-    { name: "photoUrl", maxCount: 1 },
+    { name: "photoUrl", maxCount: 1 }, //upload.array("photoUrl" , 10); -- for multiple files
     { name: "houseRules", maxCount: 1 },
   ]),
-  hostController.postAddHomeApi
+  hostController.postAddHomeApi,
 );
+
 hostRouter.put(
   "/host/homes/:homeId",
   requireHostApi,
@@ -33,8 +35,13 @@ hostRouter.put(
     { name: "photoUrl", maxCount: 1 },
     { name: "houseRules", maxCount: 1 },
   ]),
-  hostController.postEditHomeApi
+  hostController.postEditHomeApi,
 );
-hostRouter.delete("/host/homes/:homeId", requireHostApi, hostController.postDeleteHomeApi);
+
+hostRouter.delete(
+  "/host/homes/:homeId",
+  requireHostApi,
+  hostController.postDeleteHomeApi,
+);
 
 export default hostRouter;

@@ -1,4 +1,4 @@
-import { check,validationResult  } from "express-validator";
+import { check, validationResult } from "express-validator";
 import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 
@@ -21,7 +21,6 @@ const saveSession = (req) =>
     });
   });
 
-
 export const getCurrentUserApi = async (req, res, next) => {
   try {
     if (!req.session.isLoggedIn || !req.session.user?._id) {
@@ -29,7 +28,7 @@ export const getCurrentUserApi = async (req, res, next) => {
     }
 
     const currentUser = await User.findById(req.session.user._id).populate(
-      "favourites"
+      "favourites",
     );
 
     if (!currentUser) {
@@ -76,7 +75,10 @@ export const postSignUpApi = [
     .matches(/^[a-zA-Z]+$/)
     .withMessage("Last Name must contain only alphabetic characters"),
 
-  check("email").isEmail().withMessage("Invalid email address").normalizeEmail(),
+  check("email")
+    .isEmail()
+    .withMessage("Invalid email address")
+    .normalizeEmail(),
 
   check("password")
     .isLength({ min: 8 })

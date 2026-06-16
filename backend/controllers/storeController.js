@@ -45,15 +45,11 @@ export const getBookingsApi = (req, res) => {
 
 export const getFavouriteListApi = async (req, res, next) => {
   try {
-    if (!req.session.user?._id) {
-      return res.status(401).json({ error: "You need to log in first." });
-    }
-
     const currentUser = await User.findById(req.session.user._id).populate(
-      "favourites"
+      "favourites",
     );
     if (!currentUser) {
-      return res.status(401).json({ error: "You need to log in first." });
+      return res.status(404).json({ error: "User not found." });
     }
 
     return res.json({
@@ -66,10 +62,6 @@ export const getFavouriteListApi = async (req, res, next) => {
 
 export const postAddToFavouriteApi = async (req, res, next) => {
   try {
-    if (!req.session.user?._id) {
-      return res.status(401).json({ error: "You need to log in first." });
-    }
-
     const homeId = req.body.id || req.body.homeId;
     if (!homeId) {
       return res.status(400).json({ error: "Home id is required." });
@@ -77,7 +69,7 @@ export const postAddToFavouriteApi = async (req, res, next) => {
 
     const currentUser = await User.findById(req.session.user._id);
     if (!currentUser) {
-      return res.status(401).json({ error: "You need to log in first." });
+      return res.status(404).json({ error: "User not found." });
     }
 
     const alreadySaved = currentUser.favourites.some(
@@ -90,7 +82,7 @@ export const postAddToFavouriteApi = async (req, res, next) => {
     }
 
     const refreshedUser = await User.findById(req.session.user._id).populate(
-      "favourites"
+      "favourites",
     );
 
     return res.json({
@@ -104,14 +96,10 @@ export const postAddToFavouriteApi = async (req, res, next) => {
 
 export const postRemoveFromFavouriteApi = async (req, res, next) => {
   try {
-    if (!req.session.user?._id) {
-      return res.status(401).json({ error: "You need to log in first." });
-    }
-
     const homeId = req.params.homeId || req.body.homeId;
     const currentUser = await User.findById(req.session.user._id);
     if (!currentUser) {
-      return res.status(401).json({ error: "You need to log in first." });
+      return res.status(404).json({ error: "User not found." });
     }
 
     currentUser.favourites = currentUser.favourites.filter(
@@ -120,7 +108,7 @@ export const postRemoveFromFavouriteApi = async (req, res, next) => {
     await currentUser.save();
 
     const refreshedUser = await User.findById(req.session.user._id).populate(
-      "favourites"
+      "favourites",
     );
     return res.json({
       message: "Favourite updated",
