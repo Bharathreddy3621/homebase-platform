@@ -15,7 +15,7 @@ import {
   ProtectedRoute,
   PublicOnlyRoute,
   SignupPage,
-} from "./pages";
+} from "./pages/index.js";
 
 export default function App() {
   return (

@@ -183,11 +183,15 @@ export const postSignUpApi = [
 export const postLoginApi = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const normalizedEmail = String(email ?? "").trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail }).collation({
+      locale: "en",
+      strength: 2,
+    });
     if (!user) {
       return res.status(422).json({
         errors: ["User does not exist"],
-        oldInput: { email },
+        oldInput: { email: normalizedEmail },
       });
     }
 
@@ -195,7 +199,7 @@ export const postLoginApi = async (req, res, next) => {
     if (!isMatch) {
       return res.status(422).json({
         errors: ["Invalid Password"],
-        oldInput: { email },
+        oldInput: { email: normalizedEmail },
       });
     }
 

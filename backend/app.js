@@ -13,7 +13,9 @@ import hostRouter from "./routes/hostRouter.js";
 
 const MongoDBStore = connectMongoDBSession(session);
 
-const dbPath = process.env.MONGODB_URI;
+const dbPath =
+  process.env.MONGODB_URI ||
+  "mongodb+srv://root:root@airbnb.6c8ivj9.mongodb.net/airbnb?appName=Airbnb";
 const sessionSecret = process.env.SESSION_SECRET || "airbnb";
 
 if (!dbPath) {
@@ -28,7 +30,6 @@ const hasFrontendBuild = fs.existsSync(frontendIndexPath);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(express.static(path.join(rootDir, "public")));
 app.use("/houseRules", express.static(path.join(rootDir, "houseRules")));
 app.use("/host/uploads", express.static(path.join(rootDir, "uploads")));
 app.use("/homes/uploads", express.static(path.join(rootDir, "uploads")));
@@ -45,7 +46,7 @@ app.use(
     saveUninitialized: true,
     resave: false,
     store,
-  })
+  }),
 );
 
 app.use((req, res, next) => {
