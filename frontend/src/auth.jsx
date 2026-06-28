@@ -1,73 +1,41 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { apiFetch } from "./api";
+import {
+  useGetCurrentUserQuery,
+  useLoginMutation,
+  useLogoutMutation,
+  useSignupMutation,
+} from "./store/apiSlice";
 
-const AuthContext = createContext(null);
+export function useAuth() {
+  const { data, isLoading, isFetching, refetch } = useGetCurrentUserQuery();
+  const [loginMutation] = useLoginMutation();
+  const [signupMutation] = useSignupMutation();
+  const [logoutMutation] = useLogoutMutation();
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const refreshAuth = async () => {
-    try {
-      const response = await apiFetch("/auth/me");
-      setUser(response.isLoggedIn ? response.user : null);
-      return response;
-    } catch (error) {
-      setUser(null);
-      return null;
-    }
-  };
-
-  useEffect(() => {
-    refreshAuth().finally(() => {
-      setLoading(false);
-    });
-  }, []);
+  const user = data?.user || null;
 
   const login = async (values) => {
-    const response = await apiFetch("/auth/login", {
-      method: "POST",
-      body: JSON.stringify(values),
-    });
-    await refreshAuth();
+    const response = await loginMutation(values).unwrap();
+    await refetch();
     return response;
   };
 
   const signup = async (values) => {
-    return apiFetch("/auth/signup", {
-      method: "POST",
-      body: JSON.stringify(values),
-    });
+    return signupMutation(values).unwrap();
   };
 
   const logout = async () => {
-    await apiFetch("/auth/logout", {
-      method: "POST",
-    });
-    setUser(null);
+    const response = await logoutMutation().unwrap();
+    await refetch();
+    return response;
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        isLoggedIn: Boolean(user),
-        refreshAuth,
-        login,
-        signup,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-}
-
-export function useAuth() {
-  const value = useContext(AuthContext);
-  if (!value) {
-    throw new Error("useAuth must be used inside AuthProvider");
-  }
-  return value;
+  return {
+    user,
+    loading: isLoading || isFetching,
+    isLoggedIn: Boolean(user),
+    refreshAuth: refetch,
+    login,
+    signup,
+    logout,
+  };
 }

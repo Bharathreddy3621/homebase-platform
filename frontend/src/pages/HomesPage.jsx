@@ -1,21 +1,20 @@
-import { useEffect, useState } from "react";
-
-import { apiFetch } from "../api";
 import { useAuth } from "../auth";
+import {
+  useAddFavouriteMutation,
+  useGetHomesQuery,
+  useRemoveFavouriteMutation,
+} from "../store/apiSlice";
 import { ErrorState, HomeGrid, LoadingState, PageIntro } from "./shared";
 
 export default function HomesPage() {
   const { user } = useAuth();
-  const [homes, setHomes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    apiFetch("/homes")
-      .then((data) => setHomes(data.homes || []))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, error, isLoading, isFetching } = useGetHomesQuery();
+  const [addFavourite] = useAddFavouriteMutation();
+  const [removeFavourite] = useRemoveFavouriteMutation();
+  const homes = data?.homes || [];
+  const loading = isLoading || isFetching;
+  const errorMessage =
+    error?.data?.error || error?.data?.errors?.[0] || error?.error || "";
 
   const toggleFavourite = async (home, isFavourite) => {
     if (!user) {
@@ -23,12 +22,9 @@ export default function HomesPage() {
     }
 
     if (isFavourite) {
-      await apiFetch(`/favourites/${home._id}`, { method: "DELETE" });
+      await removeFavourite(home._id).unwrap();
     } else {
-      await apiFetch("/favourites", {
-        method: "POST",
-        body: JSON.stringify({ id: home._id }),
-      });
+      await addFavourite(home._id).unwrap();
     }
   };
 
@@ -41,9 +37,9 @@ export default function HomesPage() {
       />
 
       {loading ? <LoadingState /> : null}
-      {error ? <ErrorState message={error} /> : null}
+      {errorMessage ? <ErrorState message={errorMessage} /> : null}
 
-      {!loading && !error ? (
+      {!loading && !errorMessage ? (
         <section className="section-card">
           <HomeGrid homes={homes} authUser={user} onToggleFavourite={toggleFavourite} />
         </section>

@@ -1,31 +1,23 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
 
-import { apiFetch } from "../api";
 import { useAuth } from "../auth";
+import {
+  useGetFavouritesQuery,
+  useRemoveFavouriteMutation,
+} from "../store/apiSlice";
 import { ErrorState, HomeGrid, LoadingState, PageIntro } from "./shared";
 
 export default function FavouritesPage() {
-  const { user, refreshAuth } = useAuth();
-  const [homes, setHomes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { user } = useAuth();
+  const { data, error, isLoading, isFetching } = useGetFavouritesQuery();
+  const [removeFavouriteMutation] = useRemoveFavouriteMutation();
+  const homes = data?.favourites || [];
+  const loading = isLoading || isFetching;
+  const errorMessage =
+    error?.data?.error || error?.data?.errors?.[0] || error?.error || "";
 
-  const loadFavourites = async () => {
-    const data = await apiFetch("/favourites");
-    setHomes(data.favourites || []);
-  };
-
-  useEffect(() => {
-    loadFavourites()
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const removeFavourite = async (home) => {
-    await apiFetch(`/favourites/${home._id}`, { method: "DELETE" });
-    await loadFavourites();
-    await refreshAuth();
+  const handleRemoveFavourite = async (home) => {
+    await removeFavouriteMutation(home._id).unwrap();
   };
 
   return (
@@ -37,14 +29,14 @@ export default function FavouritesPage() {
       />
 
       {loading ? <LoadingState /> : null}
-      {error ? <ErrorState message={error} /> : null}
+      {errorMessage ? <ErrorState message={errorMessage} /> : null}
 
-      {!loading && !error ? (
+      {!loading && !errorMessage ? (
         <section className="section-card">
           <HomeGrid
             homes={homes}
             authUser={user}
-            onToggleFavourite={removeFavourite}
+            onToggleFavourite={handleRemoveFavourite}
             emptyText="You have not saved any homes yet."
             emptyAction={
               <Link to="/homes" className="btn btn--primary">

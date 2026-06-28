@@ -1,27 +1,21 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
 
-import { apiFetch } from "../api";
+import { useGetBookingsQuery } from "../store/apiSlice";
 import { EmptyState, ErrorState, LoadingState, PageIntro } from "./shared";
 
 export default function BookingsPage() {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    apiFetch("/bookings")
-      .then((data) => setBookings(data.bookings || []))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, error, isLoading, isFetching } = useGetBookingsQuery();
+  const bookings = data?.bookings || [];
+  const loading = isLoading || isFetching;
+  const errorMessage =
+    error?.data?.error || error?.data?.errors?.[0] || error?.error || "";
 
   if (loading) {
     return <LoadingState />;
   }
 
-  if (error) {
-    return <ErrorState message={error} />;
+  if (errorMessage) {
+    return <ErrorState message={errorMessage} />;
   }
 
   return (

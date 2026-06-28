@@ -36,7 +36,7 @@ export default function SignupPage() {
       });
       navigate("/login");
     } catch (error) {
-      setErrors(error.payload?.errors || [error.message]);
+      setErrors(error?.data?.errors || [error?.data?.error || error.message]);
     } finally {
       setSubmitting(false);
     }

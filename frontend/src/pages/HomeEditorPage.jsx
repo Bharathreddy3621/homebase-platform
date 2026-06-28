@@ -1,19 +1,25 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-import { apiFetch } from "../api";
+import {
+  useCreateHostHomeMutation,
+  useGetHomeQuery,
+  useUpdateHostHomeMutation,
+} from "../store/apiSlice";
 import { LoadingState, PageIntro } from "./shared";
 
+const emptyHomeForm = {
+  houseName: "",
+  price: "",
+  location: "",
+  rating: "",
+  description: "",
+  photoUrl: null,
+  houseRules: null,
+};
+
 function HomeEditorForm({ mode, initialHome, onSubmit, submitting }) {
-  const [form, setForm] = useState({
-    houseName: "",
-    price: "",
-    location: "",
-    rating: "",
-    description: "",
-    photoUrl: null,
-    houseRules: null,
-  });
+  const [form, setForm] = useState(emptyHomeForm);
 
   useEffect(() => {
     if (initialHome) {
@@ -26,6 +32,8 @@ function HomeEditorForm({ mode, initialHome, onSubmit, submitting }) {
         photoUrl: null,
         houseRules: null,
       });
+    } else {
+      setForm(emptyHomeForm);
     }
   }, [initialHome]);
 
@@ -89,21 +97,17 @@ export default function HomeEditorPage() {
   const { homeId } = useParams();
   const navigate = useNavigate();
   const mode = homeId ? "edit" : "create";
-  const [initialHome, setInitialHome] = useState(null);
-  const [loading, setLoading] = useState(Boolean(homeId));
+  const { data, error, isLoading, isFetching } = useGetHomeQuery(homeId, {
+    skip: !homeId,
+  });
+  const [createHostHome] = useCreateHostHomeMutation();
+  const [updateHostHome] = useUpdateHostHomeMutation();
+  const initialHome = data?.home || null;
+  const loading = isLoading || isFetching;
   const [errors, setErrors] = useState([]);
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!homeId) {
-      return;
-    }
-
-    apiFetch(`/homes/${homeId}`)
-      .then((data) => setInitialHome(data.home))
-      .catch((err) => setErrors([err.message]))
-      .finally(() => setLoading(false));
-  }, [homeId]);
+  const errorMessage =
+    error?.data?.error || error?.data?.errors?.[0] || error?.error || "";
 
   const submit = async (form) => {
     setSubmitting(true);
@@ -127,20 +131,14 @@ export default function HomeEditorPage() {
       }
 
       if (mode === "edit") {
-        await apiFetch(`/host/homes/${homeId}`, {
-          method: "PUT",
-          body: formData,
-        });
+        await updateHostHome({ homeId, body: formData }).unwrap();
         navigate("/host/host-home-list");
       } else {
-        await apiFetch("/host/homes", {
-          method: "POST",
-          body: formData,
-        });
+        await createHostHome(formData).unwrap();
         navigate("/host/host-home-list");
       }
     } catch (error) {
-      setErrors(error.payload?.errors || [error.message]);
+      setErrors(error?.data?.errors || [error?.data?.error || error.message]);
     } finally {
       setSubmitting(false);
     }
@@ -148,6 +146,26 @@ export default function HomeEditorPage() {
 
   if (loading) {
     return <LoadingState />;
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="auth-layout">
+        <section className="section-card auth-card">
+          <PageIntro
+            eyebrow="Host"
+            title={mode === "edit" ? "Edit your home" : "Register a new home"}
+            copy="Upload a hero image and a PDF with house rules just like the original version."
+          />
+          <div className="form-errors">
+            <strong>Error</strong>
+            <ul>
+              <li>{errorMessage}</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    );
   }
 
   return (

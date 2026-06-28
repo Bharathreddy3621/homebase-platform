@@ -1,33 +1,26 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
 
-import { apiFetch } from "../api";
+import {
+  useDeleteHostHomeMutation,
+  useGetHostHomesQuery,
+} from "../store/apiSlice";
 import { ErrorState, HomeGrid, LoadingState, PageIntro } from "./shared";
 
 export default function HostHomesPage() {
   const navigate = useNavigate();
-  const [homes, setHomes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const loadHomes = async () => {
-    const data = await apiFetch("/host/homes");
-    setHomes(data.homes || []);
-  };
-
-  useEffect(() => {
-    loadHomes()
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, error, isLoading, isFetching } = useGetHostHomesQuery();
+  const [deleteHostHome] = useDeleteHostHomeMutation();
+  const homes = data?.homes || [];
+  const loading = isLoading || isFetching;
+  const errorMessage =
+    error?.data?.error || error?.data?.errors?.[0] || error?.error || "";
 
   const handleDelete = async (home) => {
     if (!window.confirm(`Delete ${home.houseName}?`)) {
       return;
     }
 
-    await apiFetch(`/host/homes/${home._id}`, { method: "DELETE" });
-    await loadHomes();
+    await deleteHostHome(home._id).unwrap();
   };
 
   return (
@@ -44,9 +37,9 @@ export default function HostHomesPage() {
       />
 
       {loading ? <LoadingState /> : null}
-      {error ? <ErrorState message={error} /> : null}
+      {errorMessage ? <ErrorState message={errorMessage} /> : null}
 
-      {!loading && !error ? (
+      {!loading && !errorMessage ? (
         <section className="section-card">
           <HomeGrid
             homes={homes}

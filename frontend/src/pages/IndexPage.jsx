@@ -1,22 +1,17 @@
 import { Link } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
-import { apiFetch } from "../api";
 import { useAuth } from "../auth";
+import { useGetHomesQuery } from "../store/apiSlice";
 import { ErrorState, HomeGrid, LoadingState, PageIntro } from "./shared";
 
 export default function IndexPage() {
   const { user } = useAuth();
-  const [homes, setHomes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    apiFetch("/homes")
-      .then((data) => setHomes(data.homes || []))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, error, isLoading, isFetching } = useGetHomesQuery();
+  const homes = data?.homes || [];
+  const loading = isLoading || isFetching;
+  const errorMessage =
+    error?.data?.error || error?.data?.errors?.[0] || error?.error || "";
 
   const featuredHomes = useMemo(() => homes.slice(0, 3), [homes]);
 
@@ -41,9 +36,9 @@ export default function IndexPage() {
       />
 
       {loading ? <LoadingState /> : null}
-      {error ? <ErrorState message={error} /> : null}
+      {errorMessage ? <ErrorState message={errorMessage} /> : null}
 
-      {!loading && !error ? (
+      {!loading && !errorMessage ? (
         <section className="section-card">
           <div className="section-card__head">
             <h2>Featured homes</h2>

@@ -1,23 +1,23 @@
 import { Link, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
 
-import { apiFetch } from "../api";
 import { useAuth } from "../auth";
+import {
+  useAddFavouriteMutation,
+  useGetHomeQuery,
+  useRemoveFavouriteMutation,
+} from "../store/apiSlice";
 import { EmptyState, ErrorState, LoadingState } from "./shared";
 
 export default function HomeDetailPage() {
   const { homeId } = useParams();
-  const { user, refreshAuth } = useAuth();
-  const [home, setHome] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    apiFetch(`/homes/${homeId}`)
-      .then((data) => setHome(data.home))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [homeId]);
+  const { user } = useAuth();
+  const { data, error, isLoading, isFetching } = useGetHomeQuery(homeId);
+  const [addFavourite] = useAddFavouriteMutation();
+  const [removeFavourite] = useRemoveFavouriteMutation();
+  const home = data?.home || null;
+  const loading = isLoading || isFetching;
+  const errorMessage =
+    error?.data?.error || error?.data?.errors?.[0] || error?.error || "";
 
   const isFavourite = Boolean(
     user?.favourites?.some((fav) => fav._id === home?._id)
@@ -29,23 +29,18 @@ export default function HomeDetailPage() {
     }
 
     if (isFavourite) {
-      await apiFetch(`/favourites/${home._id}`, { method: "DELETE" });
+      await removeFavourite(home._id).unwrap();
     } else {
-      await apiFetch("/favourites", {
-        method: "POST",
-        body: JSON.stringify({ id: home._id }),
-      });
+      await addFavourite(home._id).unwrap();
     }
-
-    await refreshAuth();
   };
 
   if (loading) {
     return <LoadingState />;
   }
 
-  if (error) {
-    return <ErrorState message={error} />;
+  if (errorMessage) {
+    return <ErrorState message={errorMessage} />;
   }
 
   if (!home) {
