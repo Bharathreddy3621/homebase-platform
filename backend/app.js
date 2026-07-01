@@ -14,8 +14,7 @@ import hostRouter from "./routes/hostRouter.js";
 const MongoDBStore = connectMongoDBSession(session);
 
 const dbPath =
-  process.env.MONGODB_URI ||
-  "mongodb+srv://root:root@airbnb.6c8ivj9.mongodb.net/airbnb?appName=Airbnb";
+  process.env.MONGODB_URI;
 const sessionSecret = process.env.SESSION_SECRET || "airbnb";
 
 if (!dbPath) {
